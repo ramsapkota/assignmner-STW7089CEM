@@ -1,0 +1,127 @@
+---
+title: "STW7089CEM: Assignment Solution by Ram Sapkota, 2025"
+author: Ram Sapkota
+---
+
+# Check and try install required packages 
+```{r}
+if (!require(matlib)) install.packages("matlib", dependencies = TRUE)
+if (!require(ggplot2)) install.packages("ggplot2", dependencies = TRUE)
+if (!require(rsample)) install.packages("rsample", dependencies = TRUE)
+if (!require(reshape2)) install.packages("reshape2", dependencies = TRUE)
+
+```
+# Load Required Libraries
+```{r}
+library(matlib)
+library(ggplot2)
+library(rsample)
+library(reshape2)
+```
+# Load the given dataset
+```{r}
+dataset <- read.csv("dataset.csv", header = TRUE)
+colnames(dataset) <- c("x1", "x3", "x4", "x5", "x2")
+```
+# Evaluate structure, types, nulls, ranges
+```{r}
+## View dataset structure
+str(dataset)
+
+## Summary statistics
+summary(dataset)
+
+## Check for missing values
+colSums(is.na(dataset))
+
+## Check ranges of each variable
+apply(dataset, 2, range)
+
+```
+# After evaluating dataset, we split into input (X), output (Y), and time (T) and save into respective files
+
+```{r}
+# File names to create
+files <- c("x.csv", "y.csv", "t.csv")
+
+# Create empty files (or overwrite if they exist)
+for (file in files) {
+  file.create(file)
+}
+```
+# Transfer data into newly created files
+```{r}
+
+# Extract input features: x1, x3, x4, x5
+X <- dataset[, c("x1", "x3", "x4", "x5")]
+
+# Extract output variable: x2
+Y <- dataset[, "x2", drop = FALSE]
+
+# Create sequential time index
+total_rows <- nrow(dataset) # exclude header count
+T <- data.frame(t = 1:total_rows)
+
+write.table(X, "x.csv", 
+            sep = ",", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+write.table(Y, "y.csv", 
+            sep = ",", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+write.table(T, "t.csv",
+            sep = ",", row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+```
+```{r}
+length_x <- length(readLines("x.csv"))
+length_y <- length(readLines("y.csv"))
+length_t <- length(readLines("t.csv"))
+
+cat("Total lines in X.csv:", length_x, "\n")
+cat("Total lines in Y.csv:", length_y, "\n")
+cat("Total lines in T.csv:", length_t, "\n")
+```
+# Task 1.1 : Time Series Plot(of input and output signal)
+```{r}
+
+X[] <- lapply(X, as.numeric)
+
+X.ts <- ts(X)
+
+par(mfrow = c(2, 1), 
+    mar = c(1, 5, 3.5, 1),  
+    oma = c(1, 1, 1, 0))   
+
+# Plot each variable separately with appropriate labels
+plot(X.ts[, 1], type = "l", col = "black",
+     ylab = "Temperature (°C)",
+     main = "x1: Temperature (T)")
+
+plot(X.ts[, 2], type = "l", col = "black",
+     ylab = "Pressure (millibar)",
+     main = "x3: Ambient Pressure (AP)")
+
+plot(X.ts[, 3], type = "l", col = "black",
+     ylab = "Humidity (%)",
+     main = "x4: Relative Humidity (RH)")
+
+plot(X.ts[, 4], type = "l", col = "black",
+     ylab = "Vacuum (cm Hg)",
+     xlab = "Time Index",
+     main = "x5: Exhaust Vacuum (V)")
+
+
+# Reset to single plot layout for Y variable
+par(mfrow = c(1, 1), 
+    mar = c(5, 5, 4, 2),
+    oma = c(1, 0, 2, 0))    
+
+# Plot Y variable
+plot(Y.ts, type = "l", col = "black",
+     ylab = "Energy Output (MW)/Hourly(Net)",
+     xlab = "Time Index",
+     main = "x2: Output Variable (Y)")
+
+
+
+```
