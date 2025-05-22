@@ -1,6 +1,6 @@
 ---
-title: "STW7089CEM: Assignment Solution by Ram Sapkota, 2025"
-author: Ram Sapkota
+title: 'STW7089CEM: Assignment Solution by Ram Sapkota, 2025'
+author: "Ram Sapkota"
 ---
 
 # Check and try install required packages 
@@ -62,23 +62,23 @@ for (file in files) {
 ```{r}
 
 # Extract input features: x1, x3, x4, x5
-X <- dataset[, c("x1", "x3", "x4", "x5")]
+X <- dataset[, c("x1", "x3", "x4", "x5"),]
 
 # Extract output variable: x2
 Y <- dataset[, "x2", drop = FALSE]
 
 # Create sequential time index
 total_rows <- nrow(dataset) # exclude header count
-T <- data.frame(t = 1:total_rows)
+T <- data.frame(t = 1:total_rows-1)
 
 write.table(X, "x.csv", 
-            sep = ",", row.names = FALSE, col.names = TRUE, quote = FALSE)
+            sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 write.table(Y, "y.csv", 
-            sep = ",", row.names = FALSE, col.names = TRUE, quote = FALSE)
+            sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 write.table(T, "t.csv",
-            sep = ",", row.names = FALSE, col.names = TRUE, quote = FALSE)
+            sep = ",", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 ```
 ```{r}
@@ -325,92 +325,732 @@ grid.arrange(p3, ncol = 1, nrow = 1)
 grid.arrange(p4, ncol = 1, nrow = 1)
 grid.arrange(p5, ncol = 1, nrow = 1)
 ```
+# Task 2
+
+# Calculating ones for binding the data
 
 
-# Data Normaliation and Addressing Multicollinearity
+
+
 ```{r}
-# Function for Z-score normalization
-zscore_normalize <- function(data) {
-  return(scale(data))  # Built-in R function for Z-score
-}
+ones = matrix(1 , length(X)/4,1)
+head(length(ones))
+```
+
+# Task 2.1
+
+
+
+```{r}
+Y <- unlist(Y)  # Flatten it to a vector
+Y <- as.numeric(Y)
+```
+
+
+
+```{r}
+x3 <- X[,"x3"]
+x4 <- X[,"x4"]
+
+x3_std <- (x3 - mean(x3)) / sd(x3)
+x4_std <- (x4 - mean(x4)) / sd(x4)
+x3_sq_std <- x3_std^2
+ones <- rep(1, length(x3))
+
+# Bind into design matrix
+X_model1_std <- cbind(ones, x4_std, x3_sq_std)
+
+is.numeric(Y)
+is.matrix(X_model1_std)
+nrow(X_model1_std)
+length(Y)
+# Calculate thetahat with standardized data
+Model1_thetahat_std <- solve(t(X_model1_std) %*% X_model1_std) %*% t(X_model1_std) %*% Y
+head(Model1_thetahat_std)
+# Show results
+head(X_model1_std)
+Model1_thetahat_std
+```
+
+```{r}
+# Safe definition block (run once)
+ones <- rep(1, nrow(X))                 # Intercept term
+Y <- as.numeric(Y)                      # Ensure Y is numeric vector
+```
+
+
+```{r}
+# Standardize x3, x4, x5
+x3_std <- scale(X[,"x3"], center = TRUE, scale = TRUE)
+x4_std <- scale(X[,"x4"], center = TRUE, scale = TRUE)
+x5_std <- scale(X[,"x5"], center = TRUE, scale = TRUE)
+
+# Model matrix (x3² is squared AFTER standardization)
+X_model2_std <- cbind(ones, x4_std, x3_std^2, x5_std)
+
+# Theta hat
+Model2_thetahat_std <- solve(t(X_model2_std) %*% X_model2_std) %*% t(X_model2_std) %*% Y
+
+head(X_model2_std)
+Model2_thetahat_std
+
+```
+
+```{r}
+# Model 3: Uses x3, x4, x5
+# Standardize x3, x4, x5
+x3_std <- scale(X[,"x3"], center = TRUE, scale = TRUE)
+x4_std <- scale(X[,"x4"], center = TRUE, scale = TRUE)
+x5_std <- scale(X[,"x5"], center = TRUE, scale = TRUE)
+
+# Model matrix (x5³ after standardization)
+X_model3_std <- cbind(x3_std, x4_std, x5_std^3)
+
+# Theta hat using QR solve
+Model3_thetahat_std <- qr.solve(t(X_model3_std) %*% X_model3_std) %*% t(X_model3_std) %*% Y
+
+head(X_model3_std)
+Model3_thetahat_std
+
+```
+
+```{r}
+# Standardize x3, x4, x5
+x3_std <- scale(X[,"x3"], center = TRUE, scale = TRUE)
+x4_std <- scale(X[,"x4"], center = TRUE, scale = TRUE)
+x5_std <- scale(X[,"x5"], center = TRUE, scale = TRUE)
+
+# Model matrix
+X_model4_std <- cbind(ones, x4_std, x3_std^2, x5_std^3)
+
+# Theta hat
+Model4_thetahat_std <- solve(t(X_model4_std) %*% X_model4_std) %*% t(X_model4_std) %*% Y
+
+head(X_model4_std)
+Model4_thetahat_std
+
 ```
 ```{r}
-# Apply Z-score normalization to features (X)
-X_normalized <- zscore_normalize(X)
-print("Z-score normalized X (first 5 rows):")
-print(head(X_normalized, 5))
+# Standardize x1, x3, x4
+x1_std <- scale(X[,"x1"], center = TRUE, scale = TRUE)
+x3_std <- scale(X[,"x3"], center = TRUE, scale = TRUE)
+x4_std <- scale(X[,"x4"], center = TRUE, scale = TRUE)
 
-# Apply Z-score normalization to target variable (Y)
-Y_normalized <- zscore_normalize(Y)
-print("Z-score normalized Y (first 5 rows):")
-print(head(Y_normalized, 5))
+# Model matrix
+X_model5_std <- cbind(ones, x4_std, x1_std^2, x3_std^2)
 
-# ============================================
-# MULTICOLLINEARITY CHECK
-# ============================================
+# Theta hat
+Model5_thetahat_std <- solve(t(X_model5_std) %*% X_model5_std) %*% t(X_model5_std) %*% Y
 
-# Calculate correlation matrix
-correlation_matrix <- cor(X_normalized)
-print("Correlation Matrix:")
-print(correlation_matrix)
+head(X_model5_std)
+Model5_thetahat_std
 
-# Check for high correlations (>0.8 or <-0.8)
-high_corr <- which(abs(correlation_matrix) > 0.8 & correlation_matrix != 1, arr.ind = TRUE)
-if(nrow(high_corr) > 0) {
-  print("High correlations detected:")
-  for(i in 1:nrow(high_corr)) {
-    row_var <- rownames(correlation_matrix)[high_corr[i,1]]
-    col_var <- colnames(correlation_matrix)[high_corr[i,2]]
-    corr_value <- correlation_matrix[high_corr[i,1], high_corr[i,2]]
-    print(paste(row_var, "vs", col_var, ":", round(corr_value, 3)))
-  }
-} else {
-  print("No severe multicollinearity detected (threshold: 0.8)")
-}
+```
 
-# ============================================
-# VARIANCE INFLATION FACTOR (VIF) - Optional
-# ============================================
 
-# Install and load car package if not already installed
-if(!require(car)) {
-  install.packages("car")
-  library(car)
-}
+# Task 2.2
 
-# Create a data frame for VIF calculation
-df_normalized <- data.frame(X_normalized, y = Y_normalized)
+#Calculating Y-hat and RSS for each model
 
-# Calculate VIF (values > 5 indicate multicollinearity)
-tryCatch({
-  model_for_vif <- lm(y ~ ., data = df_normalized)
-  vif_values <- vif(model_for_vif)
-  print("Variance Inflation Factors:")
-  print(vif_values)
-  print("Note: VIF > 5 indicates multicollinearity concern")
-}, error = function(e) {
-  print("VIF calculation failed - this might happen with perfect correlations")
+```{r}
+#Calculating Y-hat and RSS Model 1
+Y_hat_model1 = X_model1_std %*% Model1_thetahat_std
+head(Y_hat_model1)
+#Calculating RSS
+RSS_Model_1=sum((Y-Y_hat_model1)^2)
+head(RSS_Model_1)
+
+# Calculating Y-hat and RSS of model 2
+Y_hat_model2 = X_model2_std %*% Model2_thetahat_std
+head(Y_hat_model2)
+#Calculating RSS
+RSS_Model_2=sum((Y-Y_hat_model2)^2)
+head(RSS_Model_2)
+
+# Calculating Y-hat and RSS of model 3
+Y_hat_model3 = X_model3_std %*% Model3_thetahat_std
+head(Y_hat_model3)
+#Calculating RSS
+RSS_Model_3=sum((Y-Y_hat_model3)^2)
+head(RSS_Model_3)
+ 
+# Calculating Y-hat and RSS of model 4
+Y_hat_model4 = X_model4_std %*% Model4_thetahat_std
+head(Y_hat_model4)
+#Calculating RSS
+RSS_Model_4=sum((Y-Y_hat_model4)^2)
+head(RSS_Model_4)
+
+# Calculating Y-hat and RSS of model 5
+Y_hat_model5 = X_model5_std %*% Model5_thetahat_std
+head(Y_hat_model5)
+#Calculating RSS
+RSS_Model_5=sum((Y-Y_hat_model5)^2)
+head(RSS_Model_5)
+```
+
+#printing RSS value
+
+```{r}
+model1 <- c(RSS_Model_1)
+model2 <- c(RSS_Model_2)
+model3 <- c(RSS_Model_3)
+model4 <- c(RSS_Model_4)
+model5 <- c(RSS_Model_5)
+
+dfRSS <- data.frame(model1, model2,model3,model4,model5)
+dfRSS
+
+#anova(lm(X_model2), lm(X_model5))
+#anova
+```
+
+```{r}
+cat("RSS for Model 1:")
+head(RSS_Model_1)
+
+cat("RSS for Model 2:")
+head(RSS_Model_2)
+
+cat("RSS for Model 3:")
+head(RSS_Model_3)
+
+cat("RSS for Model 4:")
+head(RSS_Model_4)
+
+cat("RSS for Model 5:")
+head(RSS_Model_5)
+```
+
+#Task 2.3 Calculating log likelihood and Variance of each model
+
+```{r}
+N=length(Y)
+
+#Calculating the Variance of Model 1
+Variance_model1=RSS_Model_1/(N-1)
+Variance_model1
+
+#Calculating the log-likelihood of Model 1
+likehood_Model_1=
+  -(N/2)*(log(2*pi))-(N/2)*(log(Variance_model1))-(1/(2*Variance_model1))*RSS_Model_1
+likehood_Model_1
+
+#Calculating Variance and log-likelihood of Model 2
+Variance_model2=RSS_Model_2/(N-1)
+Variance_model2
+likehood_Model_2=
+  -(N/2)*(log(2*pi))-(N/2)*(log(Variance_model2))-(1/(2*Variance_model2))*RSS_Model_2
+likehood_Model_2
+
+
+#Calculating Variance and log-likelihood of Model 3
+Variance_model3=RSS_Model_3/(N-1)
+Variance_model3
+likehood_Model_3=
+  -(N/2)*(log(2*pi))-(N/2)*(log(Variance_model3))-(1/(2*Variance_model3))*RSS_Model_3
+likehood_Model_3
+
+#Calculating Variance and log-likelihood of Model 4
+Variance_model4=RSS_Model_4/(N-1)
+Variance_model4
+likehood_Model_4=
+  -(N/2)*(log(2*pi))-(N/2)*(log(Variance_model4))-(1/(2*Variance_model4))*RSS_Model_4
+likehood_Model_4
+
+#Calculating Variance and log-likelihood of Model 5
+Variance_model5=RSS_Model_5/(N-1)
+Variance_model5
+likehood_Model_5=
+  -(N/2)*(log(2*pi))-(N/2)*(log(Variance_model5))-(1/(2*Variance_model5))*RSS_Model_5
+likehood_Model_5
+```
+
+#printing variance values
+
+```{r}
+model1 <- c(Variance_model1)
+model2 <- c(Variance_model2)
+model3 <- c(Variance_model3)
+model4 <- c(Variance_model4)
+model5 <- c(Variance_model5)
+
+dfVariance <- data.frame(model1, model2,model3,model4,model5)
+dfVariance
+```
+
+#printing likelihood values
+
+```{r}
+model1 <- c(likehood_Model_1)
+model2 <- c(likehood_Model_2)
+model3 <- c(likehood_Model_3)
+model4 <- c(likehood_Model_4)
+model5 <- c(likehood_Model_5)
+
+dfLikelihood <- data.frame(model1, model2,model3,model4,model5)
+dfLikelihood
+```
+
+# Task 2.4
+
+# Calculating AIC And BIC of each model
+
+```{r}
+# Calculating AIC and BIC of model 1
+K_model1<-length(Model1_thetahat_std)
+K_model1
+AIC_model1=2*K_model1-2*likehood_Model_1
+AIC_model1
+BIC_model1=K_model1*log(N)-2*likehood_Model_1
+BIC_model1
+
+## thetahat of model 2
+K_model2<-length(Model2_thetahat_std)
+K_model2
+##Calculating AIC and BIC of model 2
+AIC_model2=2*K_model2-2*likehood_Model_2
+AIC_model2
+BIC_model2=K_model2*log(N)-2*likehood_Model_2
+BIC_model2
+
+## thetahat of model 3
+K_model3<-length(Model3_thetahat_std)
+K_model3
+##Calculating AIC and BIC of model 3
+AIC_model3=2*K_model3-2*likehood_Model_3
+AIC_model3
+BIC_model3=K_model3*log(N)-2*likehood_Model_3
+BIC_model3
+
+## thetahat of model 4
+K_model4<-length(Model4_thetahat_std)
+K_model4
+##Calculating AIC and BIC of model 4
+AIC_model4=2*K_model4-2*likehood_Model_4
+AIC_model4
+BIC_model4=K_model4*log(N)-2*likehood_Model_4
+BIC_model4
+
+## thetahat of model 5
+K_model5<-length(Model5_thetahat_std)
+K_model5
+##Calculating AIC and BIC of model 5
+AIC_model5=2*K_model5-2*likehood_Model_5
+AIC_model5
+BIC_model5=K_model5*log(N)-2*likehood_Model_5
+BIC_model5
+```
+
+#printing K values
+
+```{r}
+model1 <- c(K_model1)
+model2 <- c(K_model2)
+model3 <- c(K_model3)
+model4 <- c(K_model4)
+model5 <- c(K_model5)
+
+dfK <- data.frame(model1, model2,model3,model4,model5)
+dfK
+```
+
+#printing AIC values
+
+```{r}
+model1 <- c(AIC_model1)
+model2 <- c(AIC_model2)
+model3 <- c(AIC_model3)
+model4 <- c(AIC_model4)
+model5 <- c(AIC_model5)
+
+dfAIC <- data.frame(model1, model2,model3,model4,model5)
+dfAIC
+```
+
+#printing BIC values
+
+```{r}
+model1 <- c(BIC_model1)
+model2 <- c(BIC_model2)
+model3 <- c(BIC_model3)
+model4 <- c(BIC_model4)
+model5 <- c(BIC_model5)
+
+dfBIC <- data.frame(model1, model2,model3,model4,model5)
+dfBIC
+```
+
+## Task 2.5 calculating error plotting normal/gaussian distibution of each plot
+
+
+```{r}
+
+```
+```{r}
+# Enhanced QQ Plots for Model Comparison
+# Professional colors and clear labels
+
+par(mfrow=c(1,1))
+
+## Error of model1
+model1_error <- Y - Y_hat_model1
+model1_error
+
+## Plotting the graph QQplot and QQ line of model 1
+qqnorm(model1_error, 
+       col = "#2E86AB",           # Professional blue
+       pch = 8,                  # Solid circles
+       cex = 0.8,                 # Point size
+       main = "Model 1: Residual Normality Assessment",
+       xlab = "Theoretical Quantiles (Normal Distribution)",
+       ylab = "Sample Quantiles (Residuals)",
+       cex.main = 1.3,            # Title size
+       cex.lab = 1.1,             # Axis label size
+       font.main = 2)             # Bold title
+qqline(model1_error, 
+       col = "#E74C3C",           # Strong red
+       lwd = 2.5)                 # Thicker line
+grid(col = "lightgray", lty = 3)  # Add grid
+
+## Error of model2
+model2_error <- Y - Y_hat_model2
+
+## Plotting QQplot and QQ line of model 2
+qqnorm(model2_error, 
+       col = "#8E44AD",           # Purple
+       pch = 8,                  # Triangles
+       cex = 0.8,
+       main = "Model 2: Residual Normality Assessment",
+       xlab = "Theoretical Quantiles (Normal Distribution)",
+       ylab = "Sample Quantiles (Residuals)",
+       cex.main = 1.3,
+       cex.lab = 1.1,
+       font.main = 2)
+qqline(model2_error, 
+       col = "#F39C12",           # Orange
+       lwd = 2.5)
+grid(col = "lightgray", lty = 3)
+
+## Error of model3
+model3_error <- Y - Y_hat_model3
+
+## Plotting QQplot and QQ line of model 3
+qqnorm(model3_error, 
+       col = "#16A085",           # Teal
+       pch = 8,                  # Squares
+       cex = 0.8,
+       main = "Model 3: Residual Normality Assessment",
+       xlab = "Theoretical Quantiles (Normal Distribution)",
+       ylab = "Sample Quantiles (Residuals)",
+       cex.main = 1.3,
+       cex.lab = 1.1,
+       font.main = 2)
+qqline(model3_error, 
+       col = "#E67E22",           # Dark orange
+       lwd = 2.5)
+grid(col = "lightgray", lty = 3)
+
+## Error of model4
+model4_error <- Y - Y_hat_model4
+
+## Plotting QQplot and QQ line of model 4
+qqnorm(model4_error, 
+       col = "#C0392B",           # Dark red
+       pch = 8,                  # Diamonds
+       cex = 0.8,
+       main = "Model 4: Residual Normality Assessment",
+       xlab = "Theoretical Quantiles (Normal Distribution)",
+       ylab = "Sample Quantiles (Residuals)",
+       cex.main = 1.3,
+       cex.lab = 1.1,
+       font.main = 2)
+qqline(model4_error, 
+       col = "#27AE60",           # Green
+       lwd = 2.5)
+grid(col = "lightgray", lty = 3)
+
+## Error of model5
+model5_error <- Y - Y_hat_model5
+
+## Plotting QQplot and QQ line of model 5
+qqnorm(model5_error, 
+       col = "#D35400",           # Burnt orange
+       pch = 8,                   # Asterisks
+       cex = 0.8,
+       main = "Model 5: Residual Normality Assessment",
+       xlab = "Theoretical Quantiles (Normal Distribution)",
+       ylab = "Sample Quantiles (Residuals)",
+       cex.main = 1.3,
+       cex.lab = 1.1,
+       font.main = 2)
+qqline(model5_error, 
+       col = "#3498DB",           # Light blue
+       lwd = 2.5)
+grid(col = "lightgray", lty = 3)
+
+# Add interpretation note
+cat("\n=== INTERPRETATION GUIDE ===\n")
+cat("• Points closer to the diagonal line indicate better normality\n")
+cat("• Systematic curves or S-shapes suggest non-normal residuals\n")
+cat("• Outliers appear as points far from the line\n")
+cat("• The best model will have points most closely following the diagonal line\n")
+```
+```{r}
+library(rsample)
+
+# Combine X and Y first to keep rows aligned
+full_data <- as.data.frame(cbind(X, Y))
+split_data <- initial_split(full_data, prop = 0.7)
+train_data <- training(split_data)
+test_data <- testing(split_data)
+
+# Extract Y and design matrix components
+Y_train <- as.matrix(train_data[, "Y"])
+Y_test <- as.matrix(test_data[, "Y"])
+
+# Build design matrix for Model 2: Intercept, x4, x3^2, x5
+X_train <- cbind(1,
+                 train_data$x4,
+                 train_data$x3^2,
+                 train_data$x5)
+
+X_test <- cbind(1,
+                test_data$x4,
+                test_data$x3^2,
+                test_data$x5)
+
+# Estimate coefficients (theta_hat)
+theta_hat <- solve(t(X_train) %*% X_train) %*% t(X_train) %*% Y_train
+
+# Predictions on test set
+Y_hat_test <- X_test %*% theta_hat
+
+# Residual sum of squares
+RSS_test <- sum((Y_test - Y_hat_test)^2)
+
+# Estimate variance (σ²)
+sigma_squared <- RSS_test / (nrow(X_test) - ncol(X_test))
+
+# Standard error of predictions
+se_pred <- apply(X_test, 1, function(xi) {
+  sqrt(sigma_squared * t(xi) %*% solve(t(X_train) %*% X_train) %*% xi)
 })
 
-print("Summary of normalized data:")
-print("X variables:")
-print(summary(X_normalized))
-print("Y variable:")
-print(summary(Y_normalized))
+# Confidence interval (95%)
+z <- 1.96
+CI_lower <- Y_hat_test - z * se_pred
+CI_upper <- Y_hat_test + z * se_pred
 
-# Verify normalization worked (means should be ~0, std should be ~1)
-print("Verification - Means (should be ~0):")
-print(colMeans(X_normalized))
-print(paste("Y mean:", mean(Y_normalized)))
+# Plot prediction with CI
+plot(Y_test, type="p", pch=16, col="blue", main="Model 2 Prediction with 95% CI", ylab="Y")
+points(Y_hat_test, col="red", pch=1)
+arrows(1:length(Y_hat_test), CI_lower, 1:length(Y_hat_test), CI_upper, angle=90, code=3, length=0.05)
 
-print("Verification - Standard deviations (should be ~1):")
-print(apply(X_normalized, 2, sd))
-print(paste("Y std:", sd(Y_normalized)))
-
+# Plot training data distribution
+plot(density(Y_train), main="Density Plot of Training Output", col="blue", lwd=2)
 
 ```
 
 
+```{r}
+par(mfrow=c(1,1))
+
+## Error of model1
+model1_error <- Y-Y_hat_model1
+model1_error
+
+## Plotting the graph QQplot and QQ line of model 1
+qqnorm(model1_error, col = "darkblue",main = "QQ plot of model 1")
+qqline(model1_error, col = "red",lwd=1)
+
+
+## Error of model2
+model2_error <- Y-Y_hat_model2 # error of model 2
+## Plotting QQplot and QQ line of model 2
+qqnorm(model2_error, col = "darkblue",main = "QQ plot of model 2")
+qqline(model2_error, col = "red")
+
+
+## Error of model3
+model3_error <- Y- Y_hat_model3
+## Plotting QQplot and QQ line of model 3
+qqnorm(model3_error, col = "darkblue",main = "QQ plot of model 3")
+qqline(model3_error, col = "red")
+
+## Error of model4
+model4_error <- Y-Y_hat_model4
+## Plotting QQplot and QQ line of model 4
+qqnorm(model4_error, col = "darkblue",main = "QQ plot of model 4")
+qqline(model4_error, col = "red")
+
+## Error of model5
+model5_error <- Y- Y_hat_model5
+## Plotting QQplot and QQ line of model 5
+qqnorm(model5_error, col = "darkblue",main = "QQ plot of model 5")
+qqline(model5_error, col = "red")
+```
+
+# Task 2.7 splitting data into training and testing dataset and calculating estamation based on training dataset
+
+#also plotting normal distribution graph of training data
+
+```{r}
+## Spliting the dataset y into  Traning and testing data set.
+split_Y<-initial_split(data = as.data.frame(Y),prop=.7)
+## Traning splitted Y dataset 
+Y_training_set<-training(split_Y)
+Y_testing_set<-as.matrix(testing(split_Y))
+## Testing splitted Y dataset 
+Y_training_data<-as.matrix(Y_training_set)
+
+## Spliting the dataset of X into  Traning and testing data set.
+split_X<-initial_split(data = as.data.frame(X),prop=.7)
+## Traning splitted X dataset
+X_training_set<-training(split_X)
+## Testing splitted X dataset 
+X_testing_set<-as.matrix(testing(split_X))
+X_testing_data<-as.matrix(X_testing_set)
+X_training_data<-as.matrix(X_training_set)
+
+### Estimating model parameters using Traning set
+#training_ones=matrix(1 , length(X_training_set$x1),1)
+training_ones <- matrix(1, nrow = nrow(X_training_set), ncol = 1)
+# selected model 2 and using equation of model 2
+X_training_model<-cbind(training_ones,X_training_set[,"x4"],(X_training_set[,"x3"])^2,X_training_set[,"x5"])
+
+training_thetahat <- solve(t(X_training_model) %*% X_training_model) %*% t(X_training_model) %*% Y_training_data
+
+
+#training_thetahat=Ginv(t(X_training_model) %*% X_training_model) %*% t(X_training_model) %*%  Y_training_data
+  
+### Model out/Prediction
+Y_testing_hat = X_testing_data %*% training_thetahat
+head(Y_testing_hat)
+
+RSS_testing=sum((Y_testing_set-Y_testing_hat)^2)
+head(RSS_testing)
+
+t.test(Y_training_data, mu=500, alternative="two.sided", conf.level=0.95)
+
+C_I1=454.0137
+C_I2=454.8377
+p2 <- plot(density(Y_training_data), col="blue", lwd=2,
+           main="Distribution of Traning Data")
+abline(v=C_I1,col="red", lty=2)
+abline(v=C_I2,col="red", lty=2)
+
+thetaHat_training =solve(t(X_training_data) %*% X_training_data) %*% t(X_training_data) %*%Y_training_data
+head(thetaHat_training)
+length(thetaHat_training)
+dis_test=density(Y_training_data)
+plot((dis_test))
+plot(dis_test,main = "Density plot of Y Signal")
+
+### Calculating Confidential interval
+ #z=1.96 ##(95%) Confidential interval
+# error=((Y_testing_set-Y_testing_hat))
+# n_len=length(Y_testing_hat)
+# C_I_1= z * sqrt( (error * (1-error) ) / n_len)
+# head(C_I_1)
+# head(error)
+# C_I_2= z * sqrt( (error * (1+error)) / n_len)
+# head(C_I_2)        
+
+Variance_model = mean((Y_testing_set - Y_testing_hat)^2)
+se = sqrt(Variance_model)
+CI_lower = Y_testing_hat - z * se
+CI_upper = Y_testing_hat + z * se
+head(CI_lower)
+head(CI_upper)
+
+
+```
+```{r}
+## Simplified ABC Implementation - Start with this version
+
+# Initialize storage
+accepted_theta0 <- c()
+accepted_theta1 <- c()
+
+# Your estimated parameters (use your actual values)
+theta0_hat <- 251.671653135  
+theta1_hat <- 0.227168908   
+theta2_fixed <- -0.036521863 
+theta3_fixed <- -0.003650664 
+
+# Calculate baseline RSS with your estimated parameters
+baseline_params <- matrix(c(theta0_hat, theta1_hat, theta2_fixed, theta3_fixed))
+baseline_Y_pred <- X_model5 %*% baseline_params
+baseline_RSS <- sum((Y - baseline_Y_pred)^2)
+
+# Set tolerance as a multiple of baseline RSS
+tolerance <- baseline_RSS * 1.5  # Accept samples within 50% of best fit
+
+cat("Baseline RSS:", baseline_RSS, "\n")
+cat("Tolerance:", tolerance, "\n")
+
+# ABC with fewer iterations first to test
+num_iterations <- 1000
+accepted_count <- 0
+
+for (i in 1:num_iterations) {
+  # Sample from uniform priors 
+  theta0_sample <- runif(1, theta0_hat * 0.9, theta0_hat * 1.1)  # narrower range
+  theta1_sample <- runif(1, theta1_hat * 0.9, theta1_hat * 1.1)
+  
+  # Create parameter vector
+  sampled_params <- matrix(c(theta0_sample, theta1_sample, theta2_fixed, theta3_fixed))
+  
+  # Calculate predicted Y
+  Y_predicted <- X_model5 %*% sampled_params
+  rss_current <- sum((Y - Y_predicted)^2)
+  
+  # Accept if within tolerance
+  if (rss_current <= tolerance) {
+    accepted_theta0 <- c(accepted_theta0, theta0_sample)
+    accepted_theta1 <- c(accepted_theta1, theta1_sample)
+    accepted_count <- accepted_count + 1
+  }
+  
+  if (i %% 200 == 0) {
+    cat("Iteration", i, "- Accepted:", accepted_count, "\n")
+  }
+}
+
+cat("Final acceptance rate:", accepted_count/num_iterations * 100, "%\n")
+
+# Only plot if we have accepted samples
+if (accepted_count > 0) {
+  par(mfrow=c(1,2))
+  
+  # Marginal posteriors
+  hist(accepted_theta0, breaks=20, col="lightblue", 
+       main="Posterior: θ₀", xlab="θ₀")
+  abline(v=theta0_hat, col="red", lwd=2)
+  
+  hist(accepted_theta1, breaks=20, col="lightgreen", 
+       main="Posterior: θ₁", xlab="θ₁")
+  abline(v=theta1_hat, col="red", lwd=2)
+  
+  par(mfrow=c(1,1))
+  
+  # Joint posterior
+  plot(accepted_theta0, accepted_theta1, col="blue", pch=16,
+       main="Joint Posterior", xlab="θ₀", ylab="θ₁")
+  points(theta0_hat, theta1_hat, col="red", pch=8, cex=2)
+  
+  cat("Posterior means:\n")
+  cat("θ₀:", mean(accepted_theta0), "(true:", theta0_hat, ")\n")
+  cat("θ₁:", mean(accepted_theta1), "(true:", theta1_hat, ")\n")
+  
+} else {
+  cat("No samples accepted. Try:\n")
+  cat("1. Increase tolerance to:", baseline_RSS * 2, "\n")
+  cat("2. Widen prior ranges\n")
+  cat("3. Check your X_model5 and Y variables\n")
+}
+```
 
 
 
