@@ -327,6 +327,89 @@ grid.arrange(p5, ncol = 1, nrow = 1)
 ```
 
 
+# Data Normaliation and Addressing Multicollinearity
+```{r}
+# Function for Z-score normalization
+zscore_normalize <- function(data) {
+  return(scale(data))  # Built-in R function for Z-score
+}
+```
+```{r}
+# Apply Z-score normalization to features (X)
+X_normalized <- zscore_normalize(X)
+print("Z-score normalized X (first 5 rows):")
+print(head(X_normalized, 5))
+
+# Apply Z-score normalization to target variable (Y)
+Y_normalized <- zscore_normalize(Y)
+print("Z-score normalized Y (first 5 rows):")
+print(head(Y_normalized, 5))
+
+# ============================================
+# MULTICOLLINEARITY CHECK
+# ============================================
+
+# Calculate correlation matrix
+correlation_matrix <- cor(X_normalized)
+print("Correlation Matrix:")
+print(correlation_matrix)
+
+# Check for high correlations (>0.8 or <-0.8)
+high_corr <- which(abs(correlation_matrix) > 0.8 & correlation_matrix != 1, arr.ind = TRUE)
+if(nrow(high_corr) > 0) {
+  print("High correlations detected:")
+  for(i in 1:nrow(high_corr)) {
+    row_var <- rownames(correlation_matrix)[high_corr[i,1]]
+    col_var <- colnames(correlation_matrix)[high_corr[i,2]]
+    corr_value <- correlation_matrix[high_corr[i,1], high_corr[i,2]]
+    print(paste(row_var, "vs", col_var, ":", round(corr_value, 3)))
+  }
+} else {
+  print("No severe multicollinearity detected (threshold: 0.8)")
+}
+
+# ============================================
+# VARIANCE INFLATION FACTOR (VIF) - Optional
+# ============================================
+
+# Install and load car package if not already installed
+if(!require(car)) {
+  install.packages("car")
+  library(car)
+}
+
+# Create a data frame for VIF calculation
+df_normalized <- data.frame(X_normalized, y = Y_normalized)
+
+# Calculate VIF (values > 5 indicate multicollinearity)
+tryCatch({
+  model_for_vif <- lm(y ~ ., data = df_normalized)
+  vif_values <- vif(model_for_vif)
+  print("Variance Inflation Factors:")
+  print(vif_values)
+  print("Note: VIF > 5 indicates multicollinearity concern")
+}, error = function(e) {
+  print("VIF calculation failed - this might happen with perfect correlations")
+})
+
+print("Summary of normalized data:")
+print("X variables:")
+print(summary(X_normalized))
+print("Y variable:")
+print(summary(Y_normalized))
+
+# Verify normalization worked (means should be ~0, std should be ~1)
+print("Verification - Means (should be ~0):")
+print(colMeans(X_normalized))
+print(paste("Y mean:", mean(Y_normalized)))
+
+print("Verification - Standard deviations (should be ~1):")
+print(apply(X_normalized, 2, sd))
+print(paste("Y std:", sd(Y_normalized)))
+
+
+```
+
 
 
 
